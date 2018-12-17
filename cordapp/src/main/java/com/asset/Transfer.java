@@ -51,11 +51,11 @@ public class Transfer extends FlowLogic<SignedTransaction> {
          * ===========================================================================*/
         List<StateAndRef<AssetState>> states = getServiceHub().getVaultService().queryBy(AssetState.class).getStates();
         // We find the right asset
-        StateAndRef<AssetState> inputStateAndRef = states
-                .stream().filter(artStateAndRef -> {
-                    AssetState assetState = artStateAndRef.getState().getData();
-                    return assetState.getName().equals(name) && assetState.getOwner().equals(myID);
-                }).findAny().orElseThrow(() -> new IllegalArgumentException("The piece of art was not found."));
+        StateAndRef<AssetState> inputStateAndRef = inputStateAndRef = states
+                    .stream().filter(artStateAndRef -> {
+                        AssetState assetState = artStateAndRef.getState().getData();
+                        return assetState.getName().equals(name) && assetState.getOwner().equals(myID);
+                    }).findAny().orElseThrow(() -> new IllegalArgumentException("The piece of asset was not found."));
 
         AssetState inputAssetState = inputStateAndRef.getState().getData();
 
@@ -85,7 +85,9 @@ public class Transfer extends FlowLogic<SignedTransaction> {
         /* ============================================================================
          *          TODO 4 - Collect signature from Validator and new Owner
          * ===========================================================================*/
-        List<FlowSession> flow = ImmutableList.of(initiateFlow(this.newOwner),initiateFlow(inputAssetState.getValidator()));
+        FlowSession newFlow = initiateFlow(this.newOwner);
+        FlowSession validatorFlow = initiateFlow(inputAssetState.getValidator());
+        List<FlowSession> flow = ImmutableList.of(newFlow,validatorFlow);
         final SignedTransaction fullySignedTx = subFlow(new CollectSignaturesFlow(signedTransaction, flow, CollectSignaturesFlow.Companion.tracker()));
 
         // We get the transaction notarised and recorded automatically by the platform.

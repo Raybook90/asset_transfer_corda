@@ -33,11 +33,11 @@ public class AssetContract implements Contract {
 
             final AssetState assetInput = tx.inputsOfType(AssetState.class).get(0);
             final AssetState assetOuput = tx.outputsOfType(AssetState.class).get(0);
-            if(!command.getSigners().contains(assetInput.getOwner().getOwningKey())) throw new IllegalArgumentException("Owner is not a signer");
             if(!command.getSigners().contains(assetOuput.getOwner().getOwningKey())) throw new IllegalArgumentException("Owner is not a signer");
-            if(!assetInput.getValidator().equals(assetOuput.getValidator())) throw new IllegalArgumentException("Validator changed");
-            if(assetInput.getName()!=assetOuput.getName()) throw new IllegalArgumentException("Name changed");
+            if(!command.getSigners().contains(assetInput.getOwner().getOwningKey())) throw new IllegalArgumentException("New owner is not a signer");
             if(!command.getSigners().contains(assetInput.getValidator().getOwningKey())) throw new IllegalArgumentException("Validator is not a signer");
+            if(!assetInput.getValidator().equals(assetOuput.getValidator())) throw new IllegalArgumentException("Validator changed");
+            if(assetInput.getName().equals(assetOuput.getName())) throw new IllegalArgumentException("Name changed");
 
         }
         else {
