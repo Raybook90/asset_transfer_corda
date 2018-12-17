@@ -1,4 +1,4 @@
-package com.template.webserver;
+package com.asset.webserver;
 
 import net.corda.core.messaging.CordaRPCOps;
 import org.slf4j.Logger;

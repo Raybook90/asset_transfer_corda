@@ -1,4 +1,4 @@
-package com.template;
+package com.asset;
 
 import net.corda.core.contracts.ContractState;
 import net.corda.core.identity.AbstractParty;
@@ -10,10 +10,16 @@ import java.util.List;
 // *********
 // * State *
 // *********
-public class TemplateState implements ContractState {
+public class AssetState implements ContractState {
 
     private String name;
     private Party owner;
+
+    public Party getValidator() {
+        return validator;
+    }
+
+    private Party validator;
 
     public String getName() {
         return name;
@@ -23,9 +29,10 @@ public class TemplateState implements ContractState {
         return owner;
     }
 
-    public TemplateState(Party owner, String name) {
+    public AssetState(Party owner, String name, Party validator) {
         this.owner = owner;
         this.name = name;
+        this.validator = validator;
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.template;
+package com.asset;
 
 import com.google.common.collect.ImmutableList;
 import net.corda.core.concurrent.CordaFuture;
@@ -33,7 +33,7 @@ public class FlowTests {
 
     @Test
     public void transactionConstructedByFlowUsesTheCorrectNotary() throws Exception {
-        Initiator flow = new Initiator(nodeB.getInfo().getLegalIdentities().get(0), "Test");
+        Initiator flow = new Initiator(nodeA.getInfo().getLegalIdentities().get(0), "Test", nodeB.getInfo().getLegalIdentities().get(0));
         CordaFuture<SignedTransaction> future = nodeA.startFlow(flow);
         network.runNetwork();
         SignedTransaction signedTransaction = future.get();
@@ -46,13 +46,13 @@ public class FlowTests {
 
     @Test
     public void transactionConstructedByFlowHasOneTokenStateOutputWithTheCorrectAmountAndOwner() throws Exception {
-        Initiator flow = new Initiator(nodeB.getInfo().getLegalIdentities().get(0), "Test");
+        Initiator flow = new Initiator(nodeB.getInfo().getLegalIdentities().get(0), "Test", nodeB.getInfo().getLegalIdentities().get(0));
         CordaFuture<SignedTransaction> future = nodeA.startFlow(flow);
         network.runNetwork();
         SignedTransaction signedTransaction = future.get();
 
         assertEquals(1, signedTransaction.getTx().getOutputStates().size());
-        TemplateState output = signedTransaction.getTx().outputsOfType(TemplateState.class).get(0);
+        AssetState output = signedTransaction.getTx().outputsOfType(AssetState.class).get(0);
 
         assertEquals(nodeB.getInfo().getLegalIdentities().get(0), output.getOwner());
         assertEquals("Test", output.getName());
@@ -60,7 +60,7 @@ public class FlowTests {
 
     @Test
     public void transactionConstructedByFlowHasOneOutputUsingTheCorrectContract() throws Exception {
-        Initiator flow = new Initiator(nodeB.getInfo().getLegalIdentities().get(0), "Test");
+        Initiator flow = new Initiator(nodeB.getInfo().getLegalIdentities().get(0), "Test", nodeB.getInfo().getLegalIdentities().get(0));
         CordaFuture<SignedTransaction> future = nodeA.startFlow(flow);
         network.runNetwork();
         SignedTransaction signedTransaction = future.get();
@@ -73,7 +73,7 @@ public class FlowTests {
 
     @Test
     public void transactionConstructedByFlowHasOneIssueCommand() throws Exception {
-        Initiator flow = new Initiator(nodeB.getInfo().getLegalIdentities().get(0), "Test");
+        Initiator flow = new Initiator(nodeB.getInfo().getLegalIdentities().get(0), "Test", nodeB.getInfo().getLegalIdentities().get(0));
         CordaFuture<SignedTransaction> future = nodeA.startFlow(flow);
         network.runNetwork();
         SignedTransaction signedTransaction = future.get();
@@ -81,12 +81,12 @@ public class FlowTests {
         assertEquals(1, signedTransaction.getTx().getCommands().size());
         Command command = signedTransaction.getTx().getCommands().get(0);
 
-        assert(command.getValue() instanceof TemplateContract.Commands.Create);
+        assert(command.getValue() instanceof AssetContract.Commands.Create);
     }
 
     @Test
     public void transactionConstructedByFlowHasOneCommandWithTheIssueAsASigner() throws Exception {
-        Initiator flow = new Initiator(nodeB.getInfo().getLegalIdentities().get(0), "Test");
+        Initiator flow = new Initiator(nodeB.getInfo().getLegalIdentities().get(0), "Test", nodeB.getInfo().getLegalIdentities().get(0));
         CordaFuture<SignedTransaction> future = nodeA.startFlow(flow);
         network.runNetwork();
         SignedTransaction signedTransaction = future.get();
@@ -100,7 +100,7 @@ public class FlowTests {
 
     @Test
     public void transactionConstructedByFlowHasNoInputsAttachmentsOrTimeWindows() throws Exception {
-        Initiator flow = new Initiator(nodeB.getInfo().getLegalIdentities().get(0), "Test");
+        Initiator flow = new Initiator(nodeB.getInfo().getLegalIdentities().get(0), "Test", nodeB.getInfo().getLegalIdentities().get(0));
         CordaFuture<SignedTransaction> future = nodeA.startFlow(flow);
         network.runNetwork();
         SignedTransaction signedTransaction = future.get();
