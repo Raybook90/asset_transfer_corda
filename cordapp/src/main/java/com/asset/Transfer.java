@@ -10,7 +10,6 @@ import net.corda.core.transactions.TransactionBuilder;
 import net.corda.core.utilities.ProgressTracker;
 
 import java.security.PublicKey;
-import java.util.ArrayList;
 import java.util.List;
 
 // ******************
@@ -31,13 +30,33 @@ public class Transfer extends FlowLogic<SignedTransaction> {
         this.name = name;
     }
 
-    private final ProgressTracker progressTracker = new ProgressTracker();
 
     @Override
     public ProgressTracker getProgressTracker() {
         return progressTracker;
     }
-
+    private final ProgressTracker.Step GENERATING_TRANSACTION = new ProgressTracker.Step("Generating transaction based on new Asset.");
+    private final ProgressTracker.Step VERIFYING_TRANSACTION = new ProgressTracker.Step("Verifying contract constraints.");
+    private final ProgressTracker.Step SIGNING_TRANSACTION = new ProgressTracker.Step("Signing transaction with our private key.");
+    private final ProgressTracker.Step GATHERING_SIGS = new ProgressTracker.Step("Gathering the counterparty's signature.") {
+        @Override
+        public ProgressTracker childProgressTracker() {
+            return CollectSignaturesFlow.Companion.tracker();
+        }
+    };
+    private final ProgressTracker.Step FINALISING_TRANSACTION = new ProgressTracker.Step("Obtaining notary signature and recording transaction.") {
+        @Override
+        public ProgressTracker childProgressTracker() {
+            return FinalityFlow.Companion.tracker();
+        }
+    };
+    private final ProgressTracker progressTracker = new ProgressTracker(
+            GENERATING_TRANSACTION,
+            VERIFYING_TRANSACTION,
+            SIGNING_TRANSACTION,
+            GATHERING_SIGS,
+            FINALISING_TRANSACTION
+    );
     @Suspendable
     @Override
     public SignedTransaction call() throws FlowException {
@@ -51,7 +70,7 @@ public class Transfer extends FlowLogic<SignedTransaction> {
          * ===========================================================================*/
         List<StateAndRef<AssetState>> states = getServiceHub().getVaultService().queryBy(AssetState.class).getStates();
         // We find the right asset
-        StateAndRef<AssetState> inputStateAndRef = inputStateAndRef = states
+        StateAndRef<AssetState> inputStateAndRef = states
                     .stream().filter(artStateAndRef -> {
                         AssetState assetState = artStateAndRef.getState().getData();
                         return assetState.getName().equals(name) && assetState.getOwner().equals(myID);
@@ -62,10 +81,11 @@ public class Transfer extends FlowLogic<SignedTransaction> {
         /* ============================================================================
          *      TODO 2 - Build our transaction to update the ledger!
          * ===========================================================================*/
+        progressTracker.setCurrentStep(GENERATING_TRANSACTION);
         // We build our transaction.
         TransactionBuilder transactionBuilder =  new TransactionBuilder(notary);
         transactionBuilder.addInputState(inputStateAndRef);
-        AssetState currentState = new AssetState(this.newOwner, inputAssetState.getName(), inputAssetState.getValidator());
+        AssetState currentState = new AssetState(this.newOwner, inputAssetState.getName(), inputAssetState.getValidator(), inputAssetState.getOwner());
         transactionBuilder.addOutputState(currentState, AssetContract.ID);
         List<PublicKey> requiredSigners = ImmutableList.of(
                 inputAssetState.getOwner().getOwningKey(),
@@ -76,21 +96,27 @@ public class Transfer extends FlowLogic<SignedTransaction> {
         /* ============================================================================
          *          TODO 3 - Check if transaction is valid
          * ===========================================================================*/
+        progressTracker.setCurrentStep(VERIFYING_TRANSACTION);
         // We check our transaction is valid based on its contracts.
         transactionBuilder.verify(getServiceHub());
 
+        /* ============================================================================
+         *          TODO 4 - Signing Transaction
+         * ===========================================================================*/
         // We sign the transaction with our private key, making it immutable.
+        progressTracker.setCurrentStep(SIGNING_TRANSACTION);
         SignedTransaction signedTransaction = getServiceHub().signInitialTransaction(transactionBuilder);
 
         /* ============================================================================
          *          TODO 4 - Collect signature from Validator and new Owner
          * ===========================================================================*/
-        FlowSession newFlow = initiateFlow(this.newOwner);
-        FlowSession validatorFlow = initiateFlow(inputAssetState.getValidator());
-        List<FlowSession> flow = ImmutableList.of(newFlow,validatorFlow);
+        progressTracker.setCurrentStep(GATHERING_SIGS);
+        //FlowSession validatorFlow = initiateFlow(inputAssetState.getValidator());
+        List<FlowSession> flow = ImmutableList.of(initiateFlow(this.newOwner), initiateFlow(inputAssetState.getValidator()));
         final SignedTransaction fullySignedTx = subFlow(new CollectSignaturesFlow(signedTransaction, flow, CollectSignaturesFlow.Companion.tracker()));
 
         // We get the transaction notarised and recorded automatically by the platform.
+        progressTracker.setCurrentStep(FINALISING_TRANSACTION);
         return subFlow(new FinalityFlow(fullySignedTx));
     }
 }

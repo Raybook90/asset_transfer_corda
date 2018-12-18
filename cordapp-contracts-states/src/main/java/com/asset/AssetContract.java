@@ -37,7 +37,7 @@ public class AssetContract implements Contract {
             if(!command.getSigners().contains(assetInput.getOwner().getOwningKey())) throw new IllegalArgumentException("New owner is not a signer");
             if(!command.getSigners().contains(assetInput.getValidator().getOwningKey())) throw new IllegalArgumentException("Validator is not a signer");
             if(!assetInput.getValidator().equals(assetOuput.getValidator())) throw new IllegalArgumentException("Validator changed");
-            if(assetInput.getName().equals(assetOuput.getName())) throw new IllegalArgumentException("Name changed");
+            if(!assetInput.getName().equals(assetOuput.getName())) throw new IllegalArgumentException("Name changed");
 
         }
         else {
