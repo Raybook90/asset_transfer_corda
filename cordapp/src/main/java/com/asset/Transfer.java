@@ -85,7 +85,7 @@ public class Transfer extends FlowLogic<SignedTransaction> {
         // We build our transaction.
         TransactionBuilder transactionBuilder =  new TransactionBuilder(notary);
         transactionBuilder.addInputState(inputStateAndRef);
-        AssetState currentState = new AssetState(this.newOwner, inputAssetState.getName(), inputAssetState.getValidator(), inputAssetState.getOwner());
+        AssetState currentState = new AssetState(this.newOwner, inputAssetState.getName(), inputAssetState.getValidator(), inputAssetState.getOwner(), inputAssetState.getLinearId());
         transactionBuilder.addOutputState(currentState, AssetContract.ID);
         List<PublicKey> requiredSigners = ImmutableList.of(
                 inputAssetState.getOwner().getOwningKey(),

@@ -2,6 +2,7 @@ package com.asset;
 
 import co.paralleluniverse.fibers.Suspendable;
 import com.google.common.collect.ImmutableList;
+import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.flows.*;
 import net.corda.core.identity.Party;
 import net.corda.core.transactions.SignedTransaction;
@@ -10,6 +11,7 @@ import net.corda.core.utilities.ProgressTracker;
 
 import java.security.PublicKey;
 import java.util.List;
+import java.util.UUID;
 
 // ******************
 // * Initiator flow *
@@ -73,7 +75,8 @@ public class Initiator extends FlowLogic<SignedTransaction> {
          *         TODO 1 - Create our state to represent on-ledger asset!
          * ===========================================================================*/
         // We create our new TokenState.
-        AssetState tokenState = new AssetState(owner, name, validator, null);
+        UniqueIdentifier id = UniqueIdentifier.Companion.fromString(UUID.nameUUIDFromBytes(name.getBytes()).toString());
+        AssetState tokenState = new AssetState(owner, name, validator, null, id);
 
         /* ============================================================================
          *         TODO 2 - Build our transaction to update the ledger!

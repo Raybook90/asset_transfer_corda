@@ -31,6 +31,7 @@ public class Client {
         // Interact with the node.
         // For example, here we print the nodes on the network.
         final List<NodeInfo> nodes = proxy.networkMapSnapshot();
+        System.out.println(proxy.currentNodeTime());
         logger.info("{}", nodes);
     }
 }
