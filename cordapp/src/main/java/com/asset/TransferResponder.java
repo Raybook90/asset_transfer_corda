@@ -44,7 +44,7 @@ public class TransferResponder extends FlowLogic<Void> {
                     try {
                         states.stream().filter(artStateAndRef -> {
                             AssetState assetState = artStateAndRef.getState().getData();
-                            return assetState.getName().equals(state) && assetState.getOwner().equals(assetState.getOwner());
+                            return assetState.getName().equals(state.getName()) && assetState.getOwner().equals(state.getOwner());
                         }).findAny().orElseThrow(() -> new IllegalArgumentException("The piece of asset was not found."));
                         throw new DuplicateFormatFlagsException("Similar Record already exists");
                     } catch (IllegalArgumentException err){

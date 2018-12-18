@@ -9,7 +9,6 @@ import net.corda.core.transactions.TransactionBuilder;
 import net.corda.core.utilities.ProgressTracker;
 
 import java.security.PublicKey;
-import java.util.ArrayList;
 import java.util.List;
 
 // ******************
